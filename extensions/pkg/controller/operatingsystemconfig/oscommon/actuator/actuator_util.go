@@ -88,6 +88,15 @@ func DataForFileContent(ctx context.Context, c client.Client, namespace string, 
 	return secret.Data[content.SecretRef.DataKey], nil
 }
 
+// OperatingSystemConfigFilePaths returns the paths of the files in the OperatingSystemConfig
+func OperatingSystemConfigFilePaths(config *extensionsv1alpha1.OperatingSystemConfig) []string {
+	filePaths := make([]string, 0, len(config.Spec.Files))
+	for _, file := range config.Spec.Files {
+		filePaths = append(filePaths, file.Path)
+	}
+	return filePaths
+}
+
 // OperatingSystemConfigUnitNames returns the names of the units in the OperatingSystemConfig
 func OperatingSystemConfigUnitNames(config *extensionsv1alpha1.OperatingSystemConfig) []string {
 	unitNames := make([]string, 0, len(config.Spec.Units))
