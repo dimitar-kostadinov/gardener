@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	commonosgenerator "github.com/gardener/gardener/extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
@@ -40,6 +41,7 @@ func CloudConfigFromOperatingSystemConfig(
 	*string,
 	error,
 ) {
+	var filePaths []string
 	files := make([]*commonosgenerator.File, 0, len(config.Spec.Files))
 	for _, file := range config.Spec.Files {
 		data, err := DataForFileContent(ctx, c, config.Namespace, &file.Content)
@@ -48,6 +50,7 @@ func CloudConfigFromOperatingSystemConfig(
 		}
 
 		files = append(files, &commonosgenerator.File{Path: file.Path, Content: data, Permissions: file.Permissions, TransmitUnencoded: file.Content.TransmitUnencoded})
+		filePaths = append(filePaths, file.Path)
 	}
 
 	units := make([]*commonosgenerator.Unit, 0, len(config.Spec.Units))
@@ -63,14 +66,19 @@ func CloudConfigFromOperatingSystemConfig(
 		}
 		units = append(units, &commonosgenerator.Unit{Name: unit.Name, Content: content, DropIns: dropIns})
 	}
+	// calculate orphan files
+	specFilePaths := sets.New(filePaths...)
+	statusFilePaths := sets.New(config.Status.Files...)
+	orphanFiles := sets.List(statusFilePaths.Difference(specFilePaths))
 
 	return generator.Generate(log, &commonosgenerator.OperatingSystemConfig{
-		Object:    config,
-		Bootstrap: config.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeProvision,
-		CRI:       config.Spec.CRIConfig,
-		Files:     files,
-		Units:     units,
-		Path:      config.Spec.ReloadConfigFilePath,
+		Object:      config,
+		Bootstrap:   config.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeProvision,
+		CRI:         config.Spec.CRIConfig,
+		Files:       files,
+		Units:       units,
+		Path:        config.Spec.ReloadConfigFilePath,
+		OrphanFiles: orphanFiles,
 	})
 }
 
@@ -89,6 +97,15 @@ func DataForFileContent(ctx context.Context, c client.Client, namespace string, 
 	}
 
 	return secret.Data[content.SecretRef.DataKey], nil
+}
+
+// OperatingSystemConfigFilePaths returns the paths of the files in the OperatingSystemConfig
+func OperatingSystemConfigFilePaths(config *extensionsv1alpha1.OperatingSystemConfig) []string {
+	filePaths := make([]string, 0, len(config.Spec.Files))
+	for _, file := range config.Spec.Files {
+		filePaths = append(filePaths, file.Path)
+	}
+	return filePaths
 }
 
 // OperatingSystemConfigUnitNames returns the names of the units in the OperatingSystemConfig

@@ -61,6 +61,7 @@ type initScriptData struct {
 	Units            []*unitData
 	Bootstrap        bool
 	Type             string
+	OrphanFiles      []string
 	AdditionalValues map[string]interface{}
 }
 
@@ -126,11 +127,12 @@ func (t *CloudInitGenerator) Generate(_ logr.Logger, data *generator.OperatingSy
 	}
 
 	initScriptData := &initScriptData{
-		Type:      data.Object.Spec.Type,
-		CRI:       data.CRI,
-		Files:     tFiles,
-		Units:     tUnits,
-		Bootstrap: data.Bootstrap,
+		Type:        data.Object.Spec.Type,
+		CRI:         data.CRI,
+		Files:       tFiles,
+		Units:       tUnits,
+		Bootstrap:   data.Bootstrap,
+		OrphanFiles: data.OrphanFiles,
 	}
 
 	if t.additionalValuesFunc != nil {

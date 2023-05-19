@@ -36,6 +36,10 @@ mkdir -p '{{ $unit.DropIns.Path }}'
 {{- end }}
 {{- end }}
 
+{{ range $_, $file := .OrphanFiles -}}
+rm -f '{{ $file }}'
+{{- end }}
+
 {{- if .Bootstrap }}
 systemctl daemon-reload
 systemctl enable cloud-config-downloader && systemctl restart cloud-config-downloader
