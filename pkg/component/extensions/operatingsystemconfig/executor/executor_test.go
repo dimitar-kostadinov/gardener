@@ -152,9 +152,9 @@ deleteOrphan() {
     touch "$PATH_CLOUDCONFIG_FILES_OLD"
   fi
   # sort for join to work
-  sort -t '\n' -o "$PATH_CLOUDCONFIG_FILES" "$PATH_CLOUDCONFIG_FILES"
+  sort -o "$PATH_CLOUDCONFIG_FILES" "$PATH_CLOUDCONFIG_FILES"
   # calculates old_files - new_files and deletes them
-  join -t '\n' -v 1 "$PATH_CLOUDCONFIG_FILES_OLD" "$PATH_CLOUDCONFIG_FILES" | tr '\n' '\0' | xargs -0 rm -f
+  join -t $'\n' -v 1 "$PATH_CLOUDCONFIG_FILES_OLD" "$PATH_CLOUDCONFIG_FILES" | xargs -L1 rm -f
   mv "$PATH_CLOUDCONFIG_FILES" "$PATH_CLOUDCONFIG_FILES_OLD"
 }
 

@@ -126,6 +126,17 @@ elif ! grep -F "$CUSTOM_CONFIG_FILES" $FILE >/dev/null ; then
   sed -Ei 's#imports = \[(.*)\]#imports = ['"$existing_imports"'"'"$CUSTOM_CONFIG_FILES"'"]#g' $FILE
 fi
 
+# configure cri registry config_path
+CONFIG_PATH=/etc/containerd/certs.d
+mkdir -p "$CONFIG_PATH"
+if ! grep -E '\[plugins."io.containerd.grpc.v1.cri".registry\]' "$FILE" >/dev/null ; then
+  echo "[plugins.\"io.containerd.grpc.v1.cri\".registry]" >> "$FILE"
+  echo "   config_path = \"$CONFIG_PATH\"" >> "$FILE"
+else
+  < "$FILE" tr '\n' '\0' | sed -E 's/\s*\[plugins\."io\.containerd\.grpc\.v1\.cri"\.registry\]\s*\x0+\s*config_path\s*=[^\x0]*/[plugins."io.containerd.grpc.v1.cri".registry]\x0   config_path = "\/etc\/containerd\/certs.d"/' | tr '\0' '\n' >  "$FILE.tmp"
+  mv "$FILE.tmp" "$FILE"
+fi
+
 BIN_PATH=/var/bin/containerruntimes
 mkdir -p $BIN_PATH
 

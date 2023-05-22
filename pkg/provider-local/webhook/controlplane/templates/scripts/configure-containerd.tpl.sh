@@ -13,26 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 hostname=garden.local.gardener.cloud
+config_path=/etc/containerd/certs.d
 
 FILENAME=/etc/containerd/config.toml
-if ! grep -q plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"localhost:5001\" "$FILENAME"; then
-  cat <<EOF >> $FILENAME
-[plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5001"]
-  endpoint = ["http://$hostname:5001"]
-[plugins."io.containerd.grpc.v1.cri".registry.mirrors."gcr.io"]
-  endpoint = ["http://$hostname:5003"]
-[plugins."io.containerd.grpc.v1.cri".registry.mirrors."eu.gcr.io"]
-  endpoint = ["http://$hostname:5004"]
-[plugins."io.containerd.grpc.v1.cri".registry.mirrors."ghcr.io"]
-  endpoint = ["http://$hostname:5005"]
-[plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.k8s.io"]
-  endpoint = ["http://$hostname:5006"]
-[plugins."io.containerd.grpc.v1.cri".registry.mirrors."quay.io"]
-  endpoint = ["http://$hostname:5007"]
-EOF
-  echo "Configured containerd with registry mirrors for local-setup."
-else
-  echo "Containerd already configured with registry mirrors."
+if grep -q plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"localhost:5001\" "$FILENAME"; then
+  # cleanup old configuration
+  sed -i -E '/\[plugins\."io\.containerd\.grpc\.v1\.cri"\.registry\.mirrors\."localhost:5001"\]/,+11d' $FILENAME
+  echo "Cleanup old registry mirrors configuration for local-setup."
 fi
+
+# configured containerd with registry mirrors for local-setup
+namespaces=('localhost:5001' 'gcr.io' 'eu.gcr.io' 'ghcr.io' 'registry.k8s.io' 'quay.io')
+servers=('http://localhost:5001' 'https://gcr.io' 'https://eu.gcr.io' 'https://ghcr.io' 'https://registry.k8s.io' 'https://quay.io')
+ports=('5001' '5003' '5004' '5005' '5006' '5007')
+
+for i in "${!namespaces[@]}"; do
+  namespace=${namespaces[$i]}
+  if [[ ! -f "${config_path}/${namespace}/hosts.toml" ]];then
+    server=${servers[$i]}
+    mkdir -p "${config_path}/${namespace}"
+    cat <<EOF > "${config_path}/${namespace}/hosts.toml"
+server="${server}"
+EOF
+    echo "Create hosts.toml for ${namespace} registry in local-setup."
+  fi
+  port=${ports[$i]}
+  if ! grep -qF "http://${hostname}:${port}" "${config_path}/${namespace}/hosts.toml"; then
+    cat <<EOF >> "${config_path}/${namespace}/hosts.toml"
+[host."http://${hostname}:${port}"]
+  capabilities = ["pull", "resolve"]
+EOF
+    echo "Append ${hostname}:${port} in hosts.toml for ${namespace} registry in local-setup."
+  fi
+done
