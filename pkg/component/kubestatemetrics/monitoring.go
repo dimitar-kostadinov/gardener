@@ -159,6 +159,7 @@ var (
 		monitoringMetricKubeNodeStatusAllocatable,
 		monitoringMetricKubeNodeStatusCapacity,
 		monitoringMetricKubeNodeStatusCondition,
+		monitoringMetricKubePersistentVolumeClaimResourceRequestsStorageBytes,
 		monitoringMetricKubePodContainerInfo,
 		monitoringMetricKubePodContainerResourceLimits,
 		monitoringMetricKubePodContainerResourceRequests,

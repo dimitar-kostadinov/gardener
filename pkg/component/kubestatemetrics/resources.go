@@ -226,8 +226,8 @@ func (k *kubeStateMetrics) reconcileDeployment(
 			gardenerutils.NetworkPolicyLabel(v1beta1constants.DeploymentNameKubeAPIServer, kubeapiserverconstants.Port): v1beta1constants.LabelNetworkPolicyAllowed,
 		})
 		args = append(args,
-			"--resources=daemonsets,deployments,nodes,pods,statefulsets,verticalpodautoscalers,replicasets",
-			"--namespaces="+metav1.NamespaceSystem,
+			"--resources=daemonsets,deployments,nodes,pods,statefulsets,verticalpodautoscalers,replicasets,persistentvolumeclaims",
+			"--namespaces="+metav1.NamespaceSystem+",registry-cache",
 			"--kubeconfig="+gardenerutils.PathGenericKubeconfig,
 			"--metric-labels-allowlist=nodes=[*]",
 		)
