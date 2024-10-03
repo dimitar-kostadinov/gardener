@@ -179,6 +179,21 @@ func (r *Reconciler) ensureContainerdConfiguration(log logr.Logger, criConfig *e
 
 	patches := []patch{
 		{
+			name: "log level",
+			path: structuredmap.Path{"debug", "level"},
+			setFn: func(_ any) (any, error) {
+				return "debug", nil
+			},
+		},
+		//discard_unpacked_layers
+		{
+			name: "disable discarding unpacked layers",
+			path: structuredmap.Path{"plugins", "io.containerd.grpc.v1.cri", "containerd", "discard_unpacked_layers"},
+			setFn: func(_ any) (any, error) {
+				return false, nil
+			},
+		},
+		{
 			name: "registry config path",
 			path: structuredmap.Path{"plugins", "io.containerd.grpc.v1.cri", "registry", "config_path"},
 			setFn: func(_ any) (any, error) {
@@ -414,6 +429,8 @@ func addRegistryToContainerdFunc(ctx context.Context, log logr.Logger, registryC
 		values = map[string]any{
 			"server":      ptr.Deref(registryConfig.Server, ""),
 			"hostConfigs": make([]any, 0, len(registryConfig.Hosts)),
+			//"localIPURL":  fmt.Sprintf("http://%s:5500", GetOutboundIP()),
+			//"localIPURL": fmt.Sprintf("http://%s:5500", "localhost"),
 		}
 	)
 
