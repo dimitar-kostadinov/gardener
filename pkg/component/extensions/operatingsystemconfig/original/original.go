@@ -14,6 +14,7 @@ import (
 	"github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/kubelet"
 	"github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/nodeagent"
 	"github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/rootcertificates"
+	"github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/spegel"
 	"github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/sshdensurer"
 	"github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/valitail"
 	"github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/varlibkubeletmount"
@@ -53,6 +54,7 @@ func Components(sshAccessEnabled bool) []components.Component {
 		containerd.NewInitializer(),
 		journald.New(),
 		kernelconfig.New(),
+		spegel.New(),
 		kubelet.New(),
 		sshdensurer.New(),
 		nodeagent.New(),

@@ -113,6 +113,10 @@ func (n *nodeExporter) Deploy(ctx context.Context) error {
 			"node_scrape_collector_success",
 			"process_max_fds",
 			"process_open_fds",
+			// spegel metrics
+			"spegel_.+",
+			"http_request_.+",
+			"http_response_.+",
 		)
 		return nil
 	}); err != nil {

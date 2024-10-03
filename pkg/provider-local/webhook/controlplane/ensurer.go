@@ -114,9 +114,19 @@ func (e *ensurer) EnsureCRIConfig(_ context.Context, _ extensionscontextwebhook.
 
 	for _, registry := range []extensionsv1alpha1.RegistryConfig{
 		{
+			Upstream: "docker.io",
+			Server:   ptr.To("https://registry-1.docker.io"),
+			Hosts:    []extensionsv1alpha1.RegistryHost{{URL: "https://mirror.gcr.io"}},
+		},
+		{
 			Upstream: "gcr.io",
 			Server:   ptr.To("https://gcr.io"),
 			Hosts:    []extensionsv1alpha1.RegistryHost{{URL: "http://garden.local.gardener.cloud:5003"}},
+		},
+		{
+			Upstream: "europe-docker.pkg.dev",
+			Server:   ptr.To("https://europe-docker.pkg.dev"),
+			Hosts:    []extensionsv1alpha1.RegistryHost{{URL: "http://garden.local.gardener.cloud:5008"}},
 		},
 		{
 			Upstream: "registry.k8s.io",
