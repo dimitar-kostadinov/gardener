@@ -2,6 +2,9 @@
 {{- if .server }}
 server = {{ .server | quote }}
 {{ end }}
+# [host.{{ .localIPURL | quote }}]
+[host."http://localhost:5500"]
+  capabilities = ["pull","resolve"]
 {{- range .hostConfigs }}
 [host.{{ .hostURL | quote }}]
   capabilities = {{ .capabilities | toJson }}
