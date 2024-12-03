@@ -7,6 +7,8 @@ package operatingsystemconfig
 import (
 	"errors"
 	"fmt"
+	"k8s.io/utils/ptr"
+	"reflect"
 	"slices"
 
 	"github.com/spf13/afero"
@@ -304,13 +306,25 @@ func computeContainerdRegistryDiffs(newRegistries, oldRegistries []extensionsv1a
 		desired: newRegistries,
 	}
 
-	upstreamsInUse := sets.New[string]()
+	upstreamsInUse := map[string]extensionsv1alpha1.RegistryConfig{}
 	for _, registryConfig := range r.desired {
-		upstreamsInUse.Insert(registryConfig.Upstream)
+		upstreamsInUse[registryConfig.Upstream] = registryConfig
+	}
+
+	for _, registryConfig := range oldRegistries {
+		if newRegistryConfig, exist := upstreamsInUse[registryConfig.Upstream]; exist {
+			if reflect.DeepEqual(registryConfig.Hosts, newRegistryConfig.Hosts) {
+				if ptr.Deref(newRegistryConfig.ReadinessProbe, false) {
+					// if no changes in Hosts suppress ReadinessProbe
+					newRegistryConfig.ReadinessProbe = ptr.To(false)
+				}
+			}
+		}
 	}
 
 	r.deleted = slices.DeleteFunc(oldRegistries, func(config extensionsv1alpha1.RegistryConfig) bool {
-		return upstreamsInUse.Has(config.Upstream)
+		_, exist := upstreamsInUse[config.Upstream]
+		return exist
 	})
 
 	return r
