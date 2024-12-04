@@ -7,6 +7,8 @@ package operatingsystemconfig
 import (
 	"errors"
 	"fmt"
+	"k8s.io/utils/ptr"
+	"reflect"
 	"slices"
 
 	"github.com/spf13/afero"
@@ -300,6 +302,9 @@ func collectAllFiles(osc *extensionsv1alpha1.OperatingSystemConfig) []extensions
 }
 
 func computeContainerdRegistryDiffs(newRegistries, oldRegistries []extensionsv1alpha1.RegistryConfig) containerdRegistries {
+	// suppress hosts probing if no changes in Hosts detected
+	suppressHostsProbing(newRegistries, oldRegistries)
+
 	r := containerdRegistries{
 		desired: newRegistries,
 	}
@@ -314,4 +319,17 @@ func computeContainerdRegistryDiffs(newRegistries, oldRegistries []extensionsv1a
 	})
 
 	return r
+}
+
+func suppressHostsProbing(newRegistries, oldRegistries []extensionsv1alpha1.RegistryConfig) {
+	for i := 0; i < len(newRegistries); i++ {
+		if ptr.Deref(newRegistries[i].ReadinessProbe, false) {
+			index := slices.IndexFunc(oldRegistries, func(config extensionsv1alpha1.RegistryConfig) bool {
+				return newRegistries[i].Upstream == config.Upstream
+			})
+			if index != -1 && reflect.DeepEqual(newRegistries[i].Hosts, oldRegistries[index].Hosts) {
+				newRegistries[i].ReadinessProbe = ptr.To(false)
+			}
+		}
+	}
 }
