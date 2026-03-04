@@ -38,6 +38,7 @@ const (
 	cgroupDriverPath
 	cniPluginPath
 	cniPluginsPaths
+	dulImagePath
 )
 
 var (
@@ -54,6 +55,7 @@ var (
 			sandboxImagePath:   {"plugins", "io.containerd.grpc.v1.cri", "sandbox_image"},
 			cgroupDriverPath:   {"plugins", "io.containerd.grpc.v1.cri", "containerd", "runtimes", "runc", "options", "SystemdCgroup"},
 			cniPluginPath:      {"plugins", "io.containerd.grpc.v1.cri", "cni", "bin_dir"},
+			dulImagePath:       {"plugins", "io.containerd.grpc.v1.cri", "containerd", "discard_unpacked_layers"},
 		},
 		3: {
 			registryConfigPath: {"plugins", "io.containerd.cri.v1.images", "registry", "config_path"},
@@ -136,6 +138,13 @@ func (r *Reconciler) ensureContainerdConfiguration(ctx context.Context, log logr
 
 	patches := []patch{
 		{
+			name: "log level",
+			path: structuredmap.Path{"debug", "level"},
+			setFn: func(_ any) (any, error) {
+				return "debug", nil
+			},
+		},
+		{
 			name: "registry config path",
 			path: containerdConfigPaths[configFileVersion][registryConfigPath],
 			setFn: func(_ any) (any, error) {
@@ -176,6 +185,13 @@ func (r *Reconciler) ensureContainerdConfiguration(ctx context.Context, log logr
 				}
 
 				return criConfig.Containerd.SandboxImage, nil
+			},
+		},
+		{
+			name: "discard unpacked layers",
+			path: containerdConfigPaths[configFileVersion][dulImagePath],
+			setFn: func(value any) (any, error) {
+				return false, nil
 			},
 		},
 	}

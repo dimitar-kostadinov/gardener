@@ -16,6 +16,7 @@ RUN mv /etc/containerd/certs.d/registry.local.gardener.cloud_5001 /etc/container
 # add our userdata executor unit
 COPY run-userdata.sh /run-userdata.sh
 COPY run-userdata.service /etc/systemd/system
+COPY spegel /opt/bin/spegel
 RUN systemctl enable run-userdata.service
 
 RUN runc --version ; containerd --version

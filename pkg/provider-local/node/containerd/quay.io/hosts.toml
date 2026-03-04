@@ -1,4 +1,7 @@
 server = "https://quay.io"
 
+[host."http://localhost:5500"]
+  capabilities = ["pull","resolve"]
+
 [host."http://quay.registry-cache.local.gardener.cloud:5001"]
   capabilities = ["pull", "resolve"]

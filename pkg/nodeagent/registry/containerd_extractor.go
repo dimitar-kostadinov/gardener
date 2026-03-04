@@ -41,6 +41,7 @@ func (e *containerdExtractor) CopyFromImage(ctx context.Context, imageRef string
 	if address == "" {
 		address = defaults.DefaultAddress
 	}
+	os.Setenv(namespaces.NamespaceEnvVar, "k8s.io") // Set namespace to `k8s.io`
 	namespace := os.Getenv(namespaces.NamespaceEnvVar)
 	if namespace == "" {
 		namespace = namespaces.Default

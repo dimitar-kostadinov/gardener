@@ -22,8 +22,8 @@ CTR_EXTRA_ARGS=""
 if [ "$CTR_MAJOR" -gt 1 ]; then
     CTR_EXTRA_ARGS="--skip-metadata"
 fi
-ctr images pull $CTR_EXTRA_ARGS --hosts-dir "/etc/containerd/certs.d" "{{ .image }}"
-ctr images mount "{{ .image }}" "$tmp_dir"
+ctr -n k8s.io images pull $CTR_EXTRA_ARGS --hosts-dir "/etc/containerd/certs.d" "{{ .image }}"
+ctr -n k8s.io images mount "{{ .image }}" "$tmp_dir"
 
 echo "> Copy {{ .binaryName }} binary to host ({{ .binaryDirectory }}) and make it executable"
 mkdir -p "{{ .binaryDirectory }}"
