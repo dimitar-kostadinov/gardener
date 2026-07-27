@@ -515,8 +515,8 @@ see https://gardener.cloud/docs/gardener/shoot/shoot_access/.
 // BootstrapControlPlane bootstraps the control plane node and returns a GardenadmBotanist connected to the API server.
 // When backupDataPath is non-empty, the bootstrap etcd is initialized from that local snapshot for disaster recovery.
 // It is exported so that the `gardenadm restore` command can reuse the same graph.
-func BootstrapControlPlane(ctx context.Context, opts *Options, backupDataPath string) (*botanist.GardenadmBotanist, error) {
-	b, err := botanist.NewGardenadmBotanistFromManifests(ctx, opts.Log, nil, opts.ConfigDir, true)
+func BootstrapControlPlane(ctx context.Context, opts *Options, backupDataPath string) (*gardenadmbotanist.GardenadmBotanist, error) {
+	b, err := gardenadmbotanist.NewGardenadmBotanistFromManifests(ctx, opts.Log, nil, opts.ConfigDir, true)
 	if err != nil {
 		return nil, err
 	}
