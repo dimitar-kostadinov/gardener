@@ -83,14 +83,12 @@ func RunInit(ctx context.Context, opts *Options) error {
 	if err != nil {
 		return fmt.Errorf("failed checking whether pod network is already available: %w", err)
 	}
-
 	// If the self-hosted shoot is also the garden runtime cluster, then gardener-operator is taking over
 	// responsibility of some components (e.g., etcd-druid). Detect this by checking whether a Garden resource exists.
 	shootIsGarden, err := gardenletutils.ClusterIsGarden(ctx, b.SeedClientSet.Client())
 	if err != nil {
 		return fmt.Errorf("failed checking whether shoot is garden: %w", err)
 	}
-
 	var (
 		g                = flow.NewGraph("init")
 		reporter         = flow.NewCommandLineProgressReporter(opts.ErrOut)
@@ -600,5 +598,15 @@ func BootstrapControlPlane(ctx context.Context, opts *Options, backupDataPath st
 		return nil, flow.Errors(err)
 	}
 
-	return gardenadmbotanist.NewGardenadmBotanistFromManifests(ctx, opts.Log, clientSet, opts.ConfigDir, true)
+	bootstrapBotanist, err := gardenadmbotanist.NewGardenadmBotanistFromManifests(ctx, opts.Log, clientSet, opts.ConfigDir, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// Carry over the OperatingSystemConfig secret built during the bootstrap phase (against the fake client) so that
+	// callers (e.g., `gardenadm restore`) can re-apply its bootstrap etcd content to the real cluster before the
+	// systemd gardener-node-agent is activated. See OverwriteOperatingSystemConfigSecret for the rationale.
+	bootstrapBotanist.SetOperatingSystemConfigSecret(b.OperatingSystemConfigSecret())
+
+	return bootstrapBotanist, nil
 }
