@@ -73,6 +73,9 @@ echo "> Connecting the Shoot cluster to Gardener..."
 CONNECT_COMMAND=$(KUBECONFIG="$VIRTUAL_GARDEN_KUBECONFIG" ./bin/gardenadm token create --print-connect-command --shoot-namespace=garden --shoot-name=root | tr -d '"')
 docker exec -ti gind-machine-0 $(echo $CONNECT_COMMAND)
 
+echo "> Waiting until the Shoot reconciliation creates Backup{Bucket,Entry} resources..."
+NAMESPACE=garden KUBECONFIG="$VIRTUAL_GARDEN_KUBECONFIG" ./hack/usage/wait-for.sh shoot root BackupBucketsReady
+
 echo "> Obtaining a ShootState resource for the Shoot..."
 # Patching the Shoot status with a successful last operation is required to allow the shootstate-controller to create a ShootState for the Shoot
 echo "> Patching the Shoot status with a successful create lastOperation..."
