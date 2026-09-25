@@ -301,14 +301,8 @@ see https://gardener.cloud/docs/gardener/shoot/shoot_access/.
 
 // BootstrapControlPlane bootstraps the control plane node and returns a GardenadmBotanist connected to the API server.
 // When backupDataPath is non-empty, the bootstrap etcd is initialized from that local snapshot for disaster recovery.
-//
-// priorNodeName is empty for `gardenadm init`. When it is non-empty (i.e. for `gardenadm restore`), a flow.TaskGroup of
-// cleanups is run after the connection to the control plane has been established and before the bootstrap secrets are
-// imported: it removes the stale resources restored from the ETCD snapshot (ManagedResources, the gardener-node-agent
-// OperatingSystemConfig Secret) and force-deletes the prior control plane Node (priorNodeName) together with the Pods
-// running on it.
-//
-// It is exported so that the `gardenadm restore` command can reuse the same graph.
+// priorNodeName is empty for `gardenadm init` and set for `gardenadm restore`, where it triggers the cleanup of stale
+// resources restored from the ETCD snapshot.
 func BootstrapControlPlane(ctx context.Context, opts *Options, backupDataPath, priorNodeName string) (*gardenadmbotanist.GardenadmBotanist, error) {
 	b, err := gardenadmbotanist.NewGardenadmBotanistFromManifests(ctx, opts.Log, nil, opts.ConfigDir, true)
 	if err != nil {
@@ -389,19 +383,19 @@ func BootstrapControlPlane(ctx context.Context, opts *Options, backupDataPath, p
 			}).RetryUntilTimeout(2*time.Second, 2*time.Minute),
 			Dependencies: flow.NewTaskIDs(applyOperatingSystemConfig),
 		})
-		// For `gardenadm restore` (priorNodeName non-empty) a TaskGroup of cleanups must run after the connection to
-		// the control plane has been established and before the bootstrap secrets are imported. It is skipped for
-		// `gardenadm init` (priorNodeName empty), where there are no stale resources restored from an ETCD snapshot.
-		performRequiredCleanups = g.AddGroup(b.RequiredCleanupsTaskGroup(&clientSet, priorNodeName).
-					WithDependencies(initializeClientSet).
-					SkipIf(priorNodeName == ""))
+		// For `gardenadm restore` these cleanups run after the connection to the control plane is established and
+		// before the bootstrap secrets are imported. Skipped for `gardenadm init` (nothing was restored) and when a
+		// kubeconfig already exists locally (a retried restore, where the OperatingSystemConfig Secret was not recomputed).
+		performCleanupStaleRestoreResources = g.AddGroup(b.CleanupStaleRestoreResourcesTaskGroup(&clientSet, priorNodeName).
+							WithDependencies(initializeClientSet).
+							SkipIf(kubeconfigFileExists || !b.Shoot.IsRestorePhase()))
 		importSecrets = g.Add(flow.Task{
 			Name: "Importing secrets into control plane",
 			Fn: func(ctx context.Context) error {
 				return b.MigrateSecrets(ctx, b.SeedClientSet.Client(), clientSet.Client())
 			},
 			SkipIf:       kubeconfigFileExists && !b.Shoot.IsRestorePhase(),
-			Dependencies: flow.NewTaskIDs(persistBootstrapSecrets, initializeClientSet, performRequiredCleanups),
+			Dependencies: flow.NewTaskIDs(persistBootstrapSecrets, initializeClientSet, performCleanupStaleRestoreResources),
 		})
 		_ = g.Add(flow.Task{
 			Name: "Deleting temporary ShootState containing bootstrap secrets",

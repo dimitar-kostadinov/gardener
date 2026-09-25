@@ -6,8 +6,6 @@ package botanist_test
 
 import (
 	"context"
-	"reflect"
-	"unsafe"
 
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
@@ -42,14 +40,6 @@ var _ = Describe("Restore", func() {
 		realClient client.Client
 	)
 
-	// setOperatingSystemConfigSecret sets the unexported operatingSystemConfigSecret field via reflection, mirroring the
-	// state left by createOperatingSystemConfigSecretForNodeAgent during bootstrap.
-	setOperatingSystemConfigSecret := func(secret *corev1.Secret) {
-		rs := reflect.ValueOf(b).Elem()
-		rf := rs.FieldByName("operatingSystemConfigSecret")
-		reflect.NewAt(rf.Type(), unsafe.Pointer(rf.UnsafeAddr())).Elem().Set(reflect.ValueOf(secret))
-	}
-
 	BeforeEach(func() {
 		realClient = fakeclient.NewClientBuilder().WithScheme(kubernetes.SeedScheme).Build()
 
@@ -67,7 +57,7 @@ var _ = Describe("Restore", func() {
 			},
 		}
 
-		setOperatingSystemConfigSecret(&corev1.Secret{
+		b.SetOperatingSystemConfigSecret(&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{Name: oscSecretName, Namespace: oscSecretNamespace},
 		})
 	})
@@ -90,7 +80,7 @@ var _ = Describe("Restore", func() {
 		})
 
 		It("should error when the OperatingSystemConfig secret was not computed yet", func() {
-			setOperatingSystemConfigSecret(nil)
+			b.SetOperatingSystemConfigSecret(nil)
 
 			Expect(b.DeleteStaleOperatingSystemConfigSecret(ctx, realClient)).To(MatchError(ContainSubstring("operating system config secret is nil")))
 		})
