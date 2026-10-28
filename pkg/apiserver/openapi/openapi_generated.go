@@ -11421,6 +11421,21 @@ func schema_pkg_apis_core_v1beta1_WorkersSettings(ref common.ReferenceCallback) 
 							Ref:         ref(v1beta1.SSHAccess{}.OpenAPIModelName()),
 						},
 					},
+					"sysctls": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Sysctls is a map of kernel settings to apply on all worker pools. It can be overridden per worker pool via `.spec.provider.workers[].sysctls` (the per-pool value fully replaces this global value, there is no merge).",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
