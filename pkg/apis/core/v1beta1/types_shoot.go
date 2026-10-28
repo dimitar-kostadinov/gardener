@@ -2078,6 +2078,10 @@ type WorkersSettings struct {
 	// SSHAccess contains settings regarding ssh access to the worker nodes.
 	// +optional
 	SSHAccess *SSHAccess `json:"sshAccess,omitempty" protobuf:"bytes,1,opt,name=sshAccess"`
+	// Sysctls is a map of kernel settings to apply on all worker pools. It can be overridden per worker pool via
+	// `.spec.provider.workers[].sysctls` (the per-pool value fully replaces this global value, there is no merge).
+	// +optional
+	Sysctls map[string]string `json:"sysctls,omitempty" protobuf:"bytes,2,rep,name=sysctls"`
 }
 
 // SSHAccess contains settings regarding ssh access to the worker nodes.

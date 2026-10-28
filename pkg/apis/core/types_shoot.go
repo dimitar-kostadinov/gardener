@@ -1607,6 +1607,9 @@ var (
 type WorkersSettings struct {
 	// SSHAccess contains settings regarding ssh access to the worker nodes.
 	SSHAccess *SSHAccess
+	// Sysctls is a map of kernel settings to apply on all worker pools. It can be overridden per worker pool via
+	// `.spec.provider.workers[].sysctls` (the per-pool value fully replaces this global value, there is no merge).
+	Sysctls map[string]string
 }
 
 // SSHAccess contains settings regarding ssh access to the worker nodes.
