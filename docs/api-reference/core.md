@@ -14553,6 +14553,18 @@ WorkersSettings contains settings for all workers.
 <p>SSHAccess contains settings regarding ssh access to the worker nodes.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>sysctls</code></br>
+<em>
+object (keys:string, values:string)
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Sysctls is a map of kernel settings to apply on all worker pools. It can be overridden per worker pool via<br />`.spec.provider.workers[].sysctls` (the per-pool value fully replaces this global value, there is no merge).</p>
+</td>
+</tr>
 
 </tbody>
 </table>
